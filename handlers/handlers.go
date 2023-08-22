@@ -19,6 +19,7 @@ type Weather struct {
 		TempC     float64 `json:"temp_c"`
 		Condition struct {
 			Text string `json:"text"`
+			Icon string `json:"icon"`
 		} `json:"condition"`
 	} `json:"current"`
 	Forecast struct {
@@ -46,39 +47,10 @@ type Response struct {
 
 type ResponseNow struct {
 	City      string  `json:"city"`
-	Counrty   string  `json:"country"`
+	Country   string  `json:"country"`
 	Temp      float64 `json:"temperature"`
 	Condition string  `json:"condition"`
-}
-
-func GetCityNow(context *gin.Context) {
-	city, isHere := context.Params.Get("city")
-	if !isHere {
-		context.Status(http.StatusBadRequest)
-	}
-	req, err := http.Get("http://api.weatherapi.com/v1/forecast.json?key=b3eac86bb01f44ce9ae101830232208&q=" + city + "&days=1&aqi=no&alerts=no")
-	if err != nil {
-		context.JSON(http.StatusBadRequest, "Wrong city")
-	}
-	defer req.Body.Close()
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		context.JSON(http.StatusBadRequest, "error while reading req.Body")
-	}
-	var weather Weather
-	err = json.Unmarshal(body, &weather)
-	if err != nil {
-		context.JSON(http.StatusBadRequest, fmt.Sprintf("Error while unmarshalling: %s", err))
-	}
-	location := weather.Location
-	current := weather.Current
-	response := ResponseNow{
-		City:      location.Name,
-		Counrty:   location.Country,
-		Temp:      current.TempC,
-		Condition: current.Condition.Text,
-	}
-	context.JSON(http.StatusOK, response)
+	Icon      string  `json:"icon"`
 }
 
 func GetCityFuture(context *gin.Context) {
@@ -113,7 +85,17 @@ func GetCityFuture(context *gin.Context) {
 			allResponses = append(allResponses, response)
 		}
 	}
+	location := weather.Location
+	current := weather.Current
+	nowResponse := ResponseNow{
+		City:      location.Name,
+		Country:   location.Country,
+		Temp:      current.TempC,
+		Condition: current.Condition.Text,
+		Icon:      current.Condition.Icon,
+	}
 	context.HTML(http.StatusOK, "index.html", gin.H{
 		"AllResponses": allResponses,
+		"ResponseNow":  nowResponse,
 	})
 }
