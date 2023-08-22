@@ -28,7 +28,7 @@ type Weather struct {
 				TempC     float64 `json:"temp_c"`
 				Condition struct {
 					Text string `json:"text"`
-					//Icon string `json:"icon"`
+					Icon string `json:"icon"`
 				} `json:"condition"`
 				ChanceOfRain float64 `json:"chance_of_rain"`
 			} `json:"hour"`
@@ -41,6 +41,7 @@ type Response struct {
 	Temp         float64 `json:"temp"`
 	ChanceOfRain float64 `json:"chance_of_rain"`
 	Condition    string  `json:"condition"`
+	Icon         string  `json:"icon"`
 }
 
 type ResponseNow struct {
@@ -77,7 +78,6 @@ func GetCityNow(context *gin.Context) {
 		Temp:      current.TempC,
 		Condition: current.Condition.Text,
 	}
-	// weatherNow := fmt.Sprintf("%s, %s, %.0fC, %s", location.Name, location.Country, current.TempC, current.Condition.Text)
 	context.JSON(http.StatusOK, response)
 }
 
@@ -100,11 +100,7 @@ func GetCityFuture(context *gin.Context) {
 	if err != nil {
 		context.JSON(http.StatusBadRequest, fmt.Sprintf("Error while unmarshalling: %s", err))
 	}
-	//location := weather.Location
-	//current := weather.Current
 	hours := weather.Forecast.Forecastday[0].Hour
-	// weatherNow := fmt.Sprintf("%s, %s, %.0fC, %s", location.Name, location.Country, current.TempC, current.Condition.Text)
-	// context.JSON(http.StatusOK, weatherNow)
 	allResponses := []Response{}
 	for _, hour := range hours {
 		if !time.Unix(hour.TimeEpoch, 0).Before(time.Now()) {
@@ -113,8 +109,11 @@ func GetCityFuture(context *gin.Context) {
 			response.Temp = hour.TempC
 			response.ChanceOfRain = hour.ChanceOfRain
 			response.Condition = hour.Condition.Text
+			response.Icon = hour.Condition.Icon
 			allResponses = append(allResponses, response)
 		}
 	}
-	context.JSON(http.StatusOK, allResponses)
+	context.HTML(http.StatusOK, "index.html", gin.H{
+		"AllResponses": allResponses,
+	})
 }
