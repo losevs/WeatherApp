@@ -75,7 +75,7 @@ func GetCityFuture(context *gin.Context) {
 	hours := weather.Forecast.Forecastday[0].Hour
 	allResponses := []Response{}
 	for _, hour := range hours {
-		if !time.Unix(hour.TimeEpoch, 0).Before(time.Now()) {
+		if !time.Unix(hour.TimeEpoch, 0).Before(time.Now()) && time.Unix(hour.TimeEpoch, 0).Sub((time.Now().Add(time.Hour*6))) <= time.Hour*11 {
 			var response Response
 			response.Time = time.Unix(hour.TimeEpoch, 0).Format("15:04")
 			response.Temp = hour.TempC
